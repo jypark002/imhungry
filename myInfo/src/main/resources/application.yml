@@ -25,10 +25,10 @@ spring:
       bindings:
         event-in:
           group: myInfo
-          destination: jyrestaurant
+          destination: imhungry
           contentType: application/json
         event-out:
-          destination: jyrestaurant
+          destination: imhungry
           contentType: application/json
 
 logging:
@@ -57,8 +57,8 @@ spring:
       bindings:
         event-in:
           group: myInfo
-          destination: jyrestaurant
+          destination: imhungry
           contentType: application/json
         event-out:
-          destination: jyrestaurant
+          destination: imhungry
           contentType: application/json

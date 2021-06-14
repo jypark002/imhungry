@@ -1,6 +1,6 @@
-package jyrestaurant;
+package imhungry;
 
-import jyrestaurant.config.kafka.KafkaProcessor;
+import imhungry.config.kafka.KafkaProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.handler.annotation.Payload;

@@ -8,6 +8,8 @@ import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class PolicyHandler{
     @Autowired DicisionRepository dicisionRepository;
@@ -20,14 +22,17 @@ public class PolicyHandler{
         System.out.println("\n\n##### listener MenuCancel : " + requestCanceled.toJson() + "\n\n");
 
         // Sample Logic //
-        Dicision dicision = new Dicision();
-        dicisionRepository.save(dicision);
-            
+        Dicision dicision = dicisionRepository.findByRequestId(requestCanceled.getRequestId());
+//        List<Dicision> list = dicisionRepository.findByRequestId(requestCanceled.getRequestId());
+//        for (Dicision dicision : list) {
+//            dicision.setStatus("CANCELED");
+            dicision.setStatus(requestCanceled.getStatus());
+            dicisionRepository.save(dicision);
+//        }
     }
 
 
     @StreamListener(KafkaProcessor.INPUT)
     public void whatever(@Payload String eventString){}
-
 
 }

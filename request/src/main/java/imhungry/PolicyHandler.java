@@ -25,6 +25,7 @@ public class PolicyHandler{
         Optional<Request> optionalRequest = requestRepository.findById(ordered.getRequestId());
         Request request = optionalRequest.get();
         request.setStatus(ordered.getStatus());
+        request.setRequestId(ordered.getRequestId());
         request.setOrderId(ordered.getId());
         request.setMenuId(ordered.getMenuId());
         requestRepository.save(request);

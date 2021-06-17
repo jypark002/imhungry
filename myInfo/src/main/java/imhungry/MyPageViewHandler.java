@@ -27,8 +27,8 @@ public class MyPageViewHandler {
             MyPage myPage = new MyPage();
             // view 객체에 이벤트의 Value 를 set 함
             myPage.setStatus(requested.getStatus());
-            myPage.setRequestId(requested.getId());
-            myPage.setMenuType(requested.getMemuType());
+            myPage.setRequestId(requested.getRequestId());
+            myPage.setMenuType(requested.getMenuType());
             // view 레파지 토리에 save
             myPageRepository.save(myPage);
         
@@ -47,7 +47,7 @@ public class MyPageViewHandler {
             for(MyPage myPage : myPageList){
                 // view 객체에 이벤트의 eventDirectValue 를 set 함
                 myPage.setStatus(menuSelected.getStatus());
-                myPage.setMenuId(menuSelected.getId());
+                myPage.setMenuId(menuSelected.getMenuId());
                 // view 레파지 토리에 save
                 myPageRepository.save(myPage);
             }
@@ -65,7 +65,7 @@ public class MyPageViewHandler {
             for(MyPage myPage : myPageList){
                 // view 객체에 이벤트의 eventDirectValue 를 set 함
                 myPage.setStatus(ordered.getStatus());
-                myPage.setOrderId(ordered.getId());
+                myPage.setOrderId(ordered.getOrderId());
                 // view 레파지 토리에 save
                 myPageRepository.save(myPage);
             }

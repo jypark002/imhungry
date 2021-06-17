@@ -21,6 +21,9 @@ public class PolicyHandler{
 
         // Sample Logic //
         Order order = new Order();
+        order.setStatus(menuSelected.getStatus());
+        order.setRequestId(menuSelected.getRequestId());
+        order.setMenuId(menuSelected.getMenuId());
         orderRepository.save(order);
             
     }
@@ -43,15 +46,13 @@ public class PolicyHandler{
 
         System.out.println("\n\n##### listener OrderCancel : " + requestCanceled.toJson() + "\n\n");
 
-        // Sample Logic //
-        Order order = new Order();
+        Order order = orderRepository.findByRequestId(requestCanceled.getRequestId());
+        order.setStatus(requestCanceled.getStatus());
         orderRepository.save(order);
-            
     }
 
 
     @StreamListener(KafkaProcessor.INPUT)
     public void whatever(@Payload String eventString){}
-
 
 }

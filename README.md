@@ -79,7 +79,7 @@
 ![Hexagonal](https://user-images.githubusercontent.com/80938080/122354721-3b2b5a00-cf8c-11eb-8f02-d938cb45169c.png)
 
 # 구현
-분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 각 Bounded Context별로 마이크로서비스들을 스프링부트로 구현하였다. 구현한 각 서비스를 로컬에서 실행하는 방법은 아래와 같다. (각 서비스의 포트넘버는 8081 ~ 8084, 8088 이다)
+분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 각 Bounded Context 별로 마이크로서비스들을 스프링부트로 구현하였다. 구현한 각 서비스를 로컬에서 실행하는 방법은 아래와 같다. (각 서비스의 포트넘버는 8081 ~ 8084, 8088 이다)
 ```shell
 cd request
 mvn spring-boot:run
@@ -96,8 +96,231 @@ mvn spring-boot:run
 cd gateway
 mvn spring-boot:run
 ```
+## DDD (Domain-Driven-Design)의 적용
+- msaez.io 에서 이벤트스토밍을 통해 DDD를 작성하고 Aggregate 단위로 Entity를 선언하여 서비스 구현을 진행하였다.
+
+> Request (메뉴추천요청) 서비스의 Request.java
+```java
+package imhungry;
+
+import javax.persistence.*;
+import org.springframework.beans.BeanUtils;
+import java.util.List;
+import java.util.Date;
+
+@Entity
+@Table(name="Request_table")
+public class Request {
+
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
+    private String status;
+    private String menuType;
+    private Long requestId;
+    private Long menuId;
+    private Long orderId;
+
+    @PostPersist
+    public void onPostPersist(){
+
+        if ("REQUESTED".equals(this.getStatus())) {
+            imhungry.external.Dicision dicision = new imhungry.external.Dicision();
+            dicision.setId(this.getId());
+            dicision.setStatus(this.getStatus());
+            dicision.setMenuType(this.getMenuType());
+            dicision.setRequestId(this.getId());
+
+            RequestApplication.applicationContext.getBean(imhungry.external.DicisionService.class)
+                    .menuSelect(dicision);
+
+            Requested requested = new Requested();
+            requested.setId(this.getId());
+            requested.setStatus(this.getStatus());
+            requested.setMenuType(this.getMenuType());
+            requested.setRequestId(this.getId());
+            requested.publishAfterCommit();
+        }
+    }
+
+    @PreUpdate
+    public void onPreUpdate() {
+
+        if ("CANCELED".equals(this.getStatus())) {
+            RequestCanceled requestCanceled = new RequestCanceled();
+            BeanUtils.copyProperties(this, requestCanceled);
+            requestCanceled.publishAfterCommit();
+        }
+    }
+
+    public Long getId() {
+        return id;
+    }
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getMenuType() {
+        return menuType;
+    }
+    public void setMenuType(String menuType) {
+        this.menuType = menuType;
+    }
+
+    public Long getRequestId() {
+        return requestId;
+    }
+    public void setRequestId(Long requestId) {
+        this.requestId = requestId;
+    }
+
+    public Long getMenuId() {
+        return menuId;
+    }
+    public void setMenuId(Long menuId) {
+        this.menuId = menuId;
+    }
+
+    public Long getOrderId() {
+        return orderId;
+    }
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
+}
+```
+
+> Request (메뉴추천요청) 서비스의 PolicyHandler.java
+```java
+package imhungry;
+
+import imhungry.config.kafka.KafkaProcessor;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.annotation.StreamListener;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+@Service
+public class PolicyHandler{
+    @Autowired RequestRepository requestRepository;
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverOrdered_UpdateStatus(@Payload Ordered ordered){
+
+        if(!ordered.validate()) return;
+
+        System.out.println("\n\n##### listener wheneverOrdered_UpdateStatus : " + ordered.toJson() + "\n\n");
+
+        Optional<Request> optionalRequest = requestRepository.findById(ordered.getRequestId());
+        Request request = optionalRequest.get();
+        request.setStatus(ordered.getStatus());
+        request.setRequestId(ordered.getRequestId());
+        request.setOrderId(ordered.getOrderId());
+        request.setMenuId(ordered.getMenuId());
+        requestRepository.save(request);
+    }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whatever(@Payload String eventString){}
+}
+```
+- 구현 후 REST API 테스트
+```shell
+# 메뉴 추천 요청
+http POST http://localhost:8083/requests menuType="A" status="REQUESTED"
+
+# 메뉴 추천 취소
+http PATCH http://localhost:8083/requests/1 status="CANCELED"
+
+# 메뉴 추천 현황 확인
+http GET http://localhost:8084/myPages
+```
 
 ## Req/Resp
+분석단계의 비기능적 조건 중 `메뉴가 결정되지 않으면 메뉴 추천되지 않는다.`의 요건을 충족하기 위해 Request 서비스에서 Dicision 서비스 간의 호출은 동기식 일관성을 유지하는 트랜잭션으로 처리하였다. 호출 프로토콜은 Rest Repository에 의해 노출되어있는 REST 서비스를 FeignClient를 이용하여 호출하도록 한다.
+
+> Request 서비스의 external.DicisionService.java
+```java
+package imhungry.external;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import java.util.Date;
+
+@FeignClient(name="dicision", url="http://dicision:8080")
+public interface DicisionService {
+
+    @RequestMapping(method= RequestMethod.GET, path="/dicisions")
+    public void menuSelect(@RequestBody Dicision dicision);
+
+}
+```
+> Request 서비스의 Req/Resp
+```java
+    @PostPersist
+    public void onPostPersist(){
+        if ("REQUESTED".equals(this.getStatus())) {
+            imhungry.external.Dicision dicision = new imhungry.external.Dicision();
+            dicision.setId(this.getId());
+            dicision.setStatus(this.getStatus());
+            dicision.setMenuType(this.getMenuType());
+            dicision.setRequestId(this.getId());
+
+            RequestApplication.applicationContext.getBean(imhungry.external.DicisionService.class)
+                    .menuSelect(dicision);
+
+            Requested requested = new Requested();
+            requested.setId(this.getId());
+            requested.setStatus(this.getStatus());
+            requested.setMenuType(this.getMenuType());
+            requested.setRequestId(this.getId());
+            requested.publishAfterCommit();
+        }
+    }
+```
+
+> Dicision 서비스의 Request 서비스 FeignClient 호출 대상
+```java
+@RestController
+public class DicisionController {
+    @Autowired
+    DicisionRepository dicisionRepository;
+
+    @RequestMapping(value = "/dicisions/menuSelect",
+            method = RequestMethod.GET,
+            produces = "application/json;charset=UTF-8")
+    public boolean menuSelect(HttpServletRequest request, HttpServletResponse response) {
+
+        Long requestId = Long.valueOf(request.getParameter("requestId"));
+        String menuType = request.getParameter("menuType");
+        if (menuType.isEmpty()) return false;
+
+        Dicision dicision = new Dicision();
+        dicision.setStatus("SELECTED");
+        dicision.setMenuType(request.getParameter("menuType"));
+        dicision.setRequestId(requestId);
+        dicision.setMenuId(new Random().nextLong());
+        dicisionRepository.save(dicision);
+
+        return true;
+    }
+}
+```
+![Cap 2021-06-18 11-44-17-405](https://user-images.githubusercontent.com/80938080/122498785-af1c3f80-d02a-11eb-9d26-2172f7b90274.png)
 
 ## Gateway
 - API Gateway를 통하여 마이크로서비스들의 진입점을 단일화하였습니다.
@@ -271,7 +494,7 @@ kubectl apply -f service.yml
 ```shell
 kubestl create configmap apiurl --from-literal=url=//http://dicision:8080 -n jypark
 ```
-kubectl get configmap apirul -o yaml
+kubectl get configmap apiurl -o yaml
 =>화면캡처
 
 ## Circuit Breaker

@@ -12,7 +12,8 @@ import java.util.Optional;
 
 @Service
 public class PolicyHandler{
-    @Autowired RequestRepository requestRepository;
+    @Autowired
+    RequestRepository requestRepository;
 
     @StreamListener(KafkaProcessor.INPUT)
     public void wheneverOrdered_UpdateStatus(@Payload Ordered ordered){
@@ -21,12 +22,11 @@ public class PolicyHandler{
 
         System.out.println("\n\n##### listener wheneverOrdered_UpdateStatus : " + ordered.toJson() + "\n\n");
 
-        // Sample Logic //
         Optional<Request> optionalRequest = requestRepository.findById(ordered.getRequestId());
         Request request = optionalRequest.get();
         request.setStatus(ordered.getStatus());
         request.setRequestId(ordered.getRequestId());
-        request.setOrderId(ordered.getId());
+        request.setOrderId(ordered.getOrderId());
         request.setMenuId(ordered.getMenuId());
         requestRepository.save(request);
     }

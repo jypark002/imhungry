@@ -2,8 +2,6 @@ package imhungry;
 
 import javax.persistence.*;
 import org.springframework.beans.BeanUtils;
-import java.util.List;
-import java.util.Date;
 
 @Entity
 @Table(name="Request_table")
@@ -20,27 +18,24 @@ public class Request {
 
     @PrePersist
     public void onPrePersist() {
-//        System.out.println("########## PrePersist Start.");
-//        System.out.println("########## STATUS=" + this.getStatus());
-//        System.out.println("########## MENUTYPE=" + this.getMenuType());
-//        System.out.println("########## REQUESTID=" + this.getId());
-//        System.out.println("########## MENUID=" + this.getMenuId());
-//        System.out.println("########## ORDERID=" + this.getOrderId());
-//        if ("CANCELED".equals(this.getStatus())) {
-//
-//        }
-//        else {
-//            this.setStatus("REQUESTED");
-//        }
-//        this.setRequestId(this.getId());
+        System.out.println("########## PrePersist Start.");
+        System.out.println("########## ID=" + this.getId());
+        System.out.println("########## STATUS=" + this.getStatus());
+        System.out.println("########## MENUTYPE=" + this.getMenuType());
+        System.out.println("########## REQUESTID=" + this.getRequestId());
+        System.out.println("########## MENUID=" + this.getMenuId());
+        System.out.println("########## ORDERID=" + this.getOrderId());
+//        if (this.getId().equals(null)) this.setId(1L);
+
     }
 
     @PostPersist
     public void onPostPersist(){
         System.out.println("########## PostPersist Start.");
+        System.out.println("########## ID=" + this.getId());
         System.out.println("########## STATUS=" + this.getStatus());
         System.out.println("########## MENUTYPE=" + this.getMenuType());
-        System.out.println("########## REQUESTID=" + this.getId());
+        System.out.println("########## REQUESTID=" + this.getRequestId());
         System.out.println("########## MENUID=" + this.getMenuId());
         System.out.println("########## ORDERID=" + this.getOrderId());
 
@@ -52,7 +47,7 @@ public class Request {
             dicision.setRequestId(this.getId());
 
             RequestApplication.applicationContext.getBean(imhungry.external.DicisionService.class)
-                    .menuSelect(dicision);
+                    .menuSelect(this.getId(), this.getMenuType());
 
             Requested requested = new Requested();
             requested.setId(this.getId());

@@ -4,6 +4,7 @@ public class MenuSelected extends AbstractEvent {
 
     private Long id;
     private String status;
+    private String menuType;
     private Long requestId;
     private Long menuId;
 
@@ -19,6 +20,13 @@ public class MenuSelected extends AbstractEvent {
     }
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getMenuType() {
+        return menuType;
+    }
+    public void setMenuType(String menuType) {
+        this.menuType = menuType;
     }
 
     public Long getRequestId() {

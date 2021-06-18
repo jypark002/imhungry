@@ -17,13 +17,9 @@ public class Dicision {
     private String menuType;
     private Long requestId;
     private Long menuId;
-//    private Integer selectCount;
 
     @PrePersist
     public void onPrePersist() {
-        this.setStatus("SELECTED");
-        this.setMenuId(new Random().nextLong());
-
         System.out.println("########## PrePersist Start.");
         System.out.println("########## STATUS=" + this.getStatus());
         System.out.println("########## MENUTYPE=" + this.getMenuType());
@@ -39,7 +35,6 @@ public class Dicision {
 
     @PostPersist
     public void onPostPersist() {
-
         System.out.println("########## PostPersist Start.");
         System.out.println("########## STATUS=" + this.getStatus());
         System.out.println("########## MENUTYPE=" + this.getMenuType());
@@ -47,23 +42,10 @@ public class Dicision {
         System.out.println("########## MENUID=" + this.getMenuId());
 
         if ("SELECTED".equals(this.getStatus())) {
-//            this.setStatus("SELECTED");
-
             MenuSelected menuSelected = new MenuSelected();
-//            menuSelected.setId(this.getId());
-//            menuSelected.setStatus("SELECTED");
-//            menuSelected.setRequestId(this.getRequestId());
-//            menuSelected.setMenuId(this.getMenuId());
             BeanUtils.copyProperties(this, menuSelected);
             menuSelected.publishAfterCommit();
         }
-//        else if ("CANCELED".equals(this.getStatus())) {
-//
-//            MenuCanceled menuCanceled = new MenuCanceled();
-////            menuCanceled.setRequestId(this.getRequestId());
-//            BeanUtils.copyProperties(this, menuCanceled);
-//            menuCanceled.publishAfterCommit();
-//        }
     }
 
     @PreUpdate
@@ -75,9 +57,7 @@ public class Dicision {
         System.out.println("########## MENUID=" + this.getMenuId());
 
         if ("CANCELED".equals(this.getStatus())) {
-
             MenuCanceled menuCanceled = new MenuCanceled();
-//            menuCanceled.setRequestId(this.getRequestId());
             BeanUtils.copyProperties(this, menuCanceled);
             menuCanceled.publishAfterCommit();
         }
@@ -118,11 +98,4 @@ public class Dicision {
     public void setMenuId(Long menuId) {
         this.menuId = menuId;
     }
-
-//    public Integer getSelectCount() {
-//        return selectCount;
-//    }
-//    public void setSelectCount(Integer selectCount) {
-//        this.selectCount = selectCount;
-//    }
 }

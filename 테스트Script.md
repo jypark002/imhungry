@@ -57,7 +57,7 @@ http POST http://localhost:8083/requests menuType="A" status="REQUESTED"
 - 메뉴 취소
 ```
 http POST http://localhost:8083/requests requestId=1 status="CANCELED"
-http patch http://localhost:8083/requests/1 status="CANCELED"
+http PATCH http://localhost:8083/requests/1 status="CANCELED"
 ```
 
 http GET http://localhost:8081/dicisions

@@ -463,7 +463,7 @@ cd kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yml
 ```
-- Deploy 결과 확인
+> Deploy 결과 확인
 ![Cap 2021-06-24 14-16-24-298](https://user-images.githubusercontent.com/80938080/123206530-d2496200-d4f6-11eb-833a-fedf13adb8a8.png)
 
 ## Config Map
@@ -499,7 +499,8 @@ kubectl apply -f service.yml
 ```shell
 kubestl create configmap apiurl --from-literal=url=//http://dicision:8080
 ```
-- ConfigMap 결과
+
+> ConfigMap 결과
 ![Cap 2021-06-24 14-02-16-163](https://user-images.githubusercontent.com/80938080/123205423-d4122600-d4f4-11eb-8853-043d329647ea.png)
 
 ## Circuit Breaker
@@ -574,8 +575,40 @@ siege -c100 -t60S -r10 -v --content-type "application/json" 'http://request:8080
 kubectl get deploy request -w
 ```
 > 오토스케일 결과 확인
-> ![Cap 2021-06-24 17-27-53-872](https://user-images.githubusercontent.com/80938080/123232379-1008b380-d514-11eb-948a-3ee430d6e505.png)
+> ![Cap 2021-06-24 17-27-53-872](https://user-images.githubusercontent.com/80938080/123267449-fd07da80-d537-11eb-96c6-6d6ca93bdc4c.png)
 
 ## Zero-downtime deploy (Readiness Probe)
+- Request 서비스의 deployment.yml에 설정되어 있는 ReadinessProbe 설정
+```yaml
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+```
+- deployment.yml 에서 ReadinessProbe 설정 제거 후, 배포 중 siege 테스트 진행
+  ![Cap 2021-06-24 20-32-31-137](https://user-images.githubusercontent.com/80938080/123256175-a3011800-d52b-11eb-8eba-6b45fbe80e9f.png)
 
 ## Self-healing (Liveness Probe)
+- Request 서비스의 deployment.yml에 설정되어 있는 LivenessProbe
+```yaml
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+```
+- Request 서비스에 Liveness가 정상 적용된 것을 확인
+  ![Cap 2021-06-24 20-58-24-385](https://user-images.githubusercontent.com/80938080/123259197-2bcd8300-d52f-11eb-94dc-cb00313c766e.png)
+  
+- Liveness 테스트를 위해 Port : 8090으로 변경
+  ![Cap 2021-06-24 21-06-27-433](https://user-images.githubusercontent.com/80938080/123260074-2290e600-d530-11eb-934c-c82f68751db7.png)
+
+- Liveness 적용된 Request 서비스에서 응답불가로 인한 Restart 동작 확인
+  ![Cap 2021-06-24 21-58-46-807](https://user-images.githubusercontent.com/80938080/123266976-77842a80-d537-11eb-99ca-c553866b3002.png)

@@ -492,10 +492,10 @@ kubectl apply -f service.yml
 
 - ConfigMap 생성
 ```shell
-kubestl create configmap apiurl --from-literal=url=//http://dicision:8080 -n jypark
+kubestl create configmap apiurl --from-literal=url=//http://dicision:8080
 ```
-kubectl get configmap apiurl -o yaml
-=>화면캡처
+- ConfigMap 결과
+![Cap 2021-06-24 14-02-16-163](https://user-images.githubusercontent.com/80938080/123205423-d4122600-d4f4-11eb-8853-043d329647ea.png)
 
 ## Circuit Breaker
 

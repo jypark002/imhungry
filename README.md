@@ -459,7 +459,7 @@ kubectl apply -f deployment.yml
 kubectl apply -f service.yml
 ```
 - Deploy 결과 확인
-=>화면캡처
+![Cap 2021-06-24 14-16-24-298](https://user-images.githubusercontent.com/80938080/123206530-d2496200-d4f6-11eb-833a-fedf13adb8a8.png)
 
 ## Config Map
 > 변경될 수 있는 설정을 ConfigMap을 사용하여 관리한다.  

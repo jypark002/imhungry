@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Date;
 
-//@FeignClient(name="dicision", url="http://dicision:8080")
-@FeignClient(name="dicision", url="http://localhost:8081")
+@FeignClient(name="dicision", url="http://dicision:8080")
+//@FeignClient(name="dicision", url="http://localhost:8081")
 public interface DicisionService {
 
     @RequestMapping(method= RequestMethod.POST, path="/dicisions/menuSelect")

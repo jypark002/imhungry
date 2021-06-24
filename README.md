@@ -415,44 +415,49 @@ mvn package
 cd ../myInfo
 mvn package
 ```
+- Azure 연결 및 권한 획득
+```shell
+# Azure 로그인
+az login
+
+# Azure 권한 획득 및 aks와 acr 연결
+az aks get-credentials --resource-group user10-rsrcgrp --name user10-aks
+kubectl config current-context
+az aks update -n user10-aks -g user10-rsrcgrp --attach-acr user10
+```
+
 - Docker Image Push/Deploy/서비스 생성(yaml 이용)
 ```shell
-# Namespace 설정
-kubectl config set-context --current --namespace=jypark
-
-# Namespace 생성
-kubectl create ns jypark
-
 cd gateway
-az acr build --registry skccjypark --image skccjypark.azurecr.io/gateway:latest .
+az acr build --registry user10 --image user10.azurecr.io/gateway:latest .
 
 cd kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yml
 
 cd ../dicision
-az acr build --registry skccjypark --image skccjypark.azurecr.io/dicision:latest .
+az acr build --registry user10 --image user10.azurecr.io/dicision:latest .
 
 cd kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yml
 
 cd ../order
-az acr build --registry skccjypark --image skccjypark.azurecr.io/order:latest .
+az acr build --registry user10 --image user10.azurecr.io/order:latest .
 
 cd kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yml
 
 cd ../request
-az acr build --registry skccjypark --image skccjypark.azurecr.io/request:latest .
+az acr build --registry user10 --image user10.azurecr.io/request:latest .
 
 cd kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yml
 
 cd ../myInfo
-az acr build --registry skccjypark --image skccjypark.azurecr.io/myInfo:latest .
+az acr build --registry user10 --image user10.azurecr.io/myInfo:latest .
 
 cd kubernetes
 kubectl apply -f deployment.yml
@@ -473,7 +478,7 @@ kubectl apply -f service.yml
 ```
 - Config Map 사용 (/request/src/main/java/jyrestaurant/external/DicisionService.java)
 ```java
-  @FeignClient(name="dicision", url="${api.url.Dicision")
+  @FeignClient(name="dicision", url="${api.url.dicision")
   public interface DicisionService {
   
       @RequestMapping(method= RequestMethod.GET, path="/dicisions")

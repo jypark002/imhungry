@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: request
-          image: username/request:latest
+          image: skccuser10.azurecr.io/request:latest
           ports:
             - containerPort: 8080
           env:

@@ -1,32 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: myInfo
+  name: order
   labels:
-    app: myInfo
+    app: order
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: myInfo
+      app: order
   template:
     metadata:
       labels:
-        app: myInfo
+        app: order
     spec:
       containers:
-        - name: myInfo
-          image: user10.azurecr.io/myInfo:latest
+        - name: order
+          image: user10.azurecr.io/order:latest
           ports:
             - containerPort: 8080
-          readinessProbe:
-            httpGet:
-              path: '/actuator/health'
-              port: 8080
-            initialDelaySeconds: 10
-            timeoutSeconds: 2
-            periodSeconds: 5
-            failureThreshold: 10
+          # readinessProbe:
+          #   httpGet:
+          #     path: '/actuator/health'
+          #     port: 8080
+          #   initialDelaySeconds: 10
+          #   timeoutSeconds: 2
+          #   periodSeconds: 5
+          #   failureThreshold: 10
           livenessProbe:
             httpGet:
               path: '/actuator/health'

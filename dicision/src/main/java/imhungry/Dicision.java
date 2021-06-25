@@ -20,31 +20,37 @@ public class Dicision {
 
     @PrePersist
     public void onPrePersist() {
-        System.out.println("########## PrePersist Start.");
-        System.out.println("########## STATUS=" + this.getStatus());
-        System.out.println("########## MENUTYPE=" + this.getMenuType());
-        System.out.println("########## REQUESTID=" + this.getRequestId());
-        System.out.println("########## MENUID=" + this.getMenuId());
+        // System.out.println("########## PrePersist Start.");
+        // System.out.println("########## STATUS=" + this.getStatus());
+        // System.out.println("########## MENUTYPE=" + this.getMenuType());
+        // System.out.println("########## REQUESTID=" + this.getRequestId());
+        // System.out.println("########## MENUID=" + this.getMenuId());
 
-        try {
-            Thread.currentThread().sleep((long) (400 + Math.random() * 220));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        // try {
+        //     Thread.currentThread().sleep((long) (400 + Math.random() * 220));
+        // } catch (InterruptedException e) {
+        //     e.printStackTrace();
+        // }
     }
 
     @PostPersist
     public void onPostPersist() {
-        System.out.println("########## PostPersist Start.");
-        System.out.println("########## STATUS=" + this.getStatus());
-        System.out.println("########## MENUTYPE=" + this.getMenuType());
-        System.out.println("########## REQUESTID=" + this.getRequestId());
-        System.out.println("########## MENUID=" + this.getMenuId());
+        // System.out.println("########## PostPersist Start.");
+        // System.out.println("########## STATUS=" + this.getStatus());
+        // System.out.println("########## MENUTYPE=" + this.getMenuType());
+        // System.out.println("########## REQUESTID=" + this.getRequestId());
+        // System.out.println("########## MENUID=" + this.getMenuId());
 
         if ("SELECTED".equals(this.getStatus())) {
             MenuSelected menuSelected = new MenuSelected();
             BeanUtils.copyProperties(this, menuSelected);
             menuSelected.publishAfterCommit();
+        
+            try {
+                Thread.currentThread().sleep((long) (400 + Math.random() * 220));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 

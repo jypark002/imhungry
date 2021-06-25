@@ -19,11 +19,11 @@ public class Order {
 
     @PostPersist
     public void onPostPersist(){
-        System.out.println("########## PostPersist Start.");
-        System.out.println("########## REQUESTID=" + this.getRequestId());
-        System.out.println("########## STATUS=" + this.getStatus());
-        System.out.println("########## MENUID=" + this.getMenuId());
-        System.out.println("########## ORDERID=" + this.getId());
+        // System.out.println("########## PostPersist Start.");
+        // System.out.println("########## REQUESTID=" + this.getRequestId());
+        // System.out.println("########## STATUS=" + this.getStatus());
+        // System.out.println("########## MENUID=" + this.getMenuId());
+        // System.out.println("########## ORDERID=" + this.getId());
 
         if ("SELECTED".equals(this.getStatus())) {
             this.setStatus("ORDERED");

@@ -25,14 +25,14 @@ spec:
                 configMapKeyRef:
                   name: apiurl
                   key: url
-          readinessProbe:
-            httpGet:
-              path: '/actuator/health'
-              port: 8080
-            initialDelaySeconds: 10
-            timeoutSeconds: 2
-            periodSeconds: 5
-            failureThreshold: 10
+          # readinessProbe:
+          #   httpGet:
+          #     path: '/actuator/health'
+          #     port: 8080
+          #   initialDelaySeconds: 10
+          #   timeoutSeconds: 2
+          #   periodSeconds: 5
+          #   failureThreshold: 10
           livenessProbe:
             httpGet:
               path: '/actuator/health'
@@ -43,6 +43,8 @@ spec:
             failureThreshold: 5
           resources:
             requests:
-              cpu: 200m
+              memory: "64Mi"
+              cpu: "250m"
             limits:
-              cpu: 500m
+              memory: "500Mi"
+              cpu: "500m"

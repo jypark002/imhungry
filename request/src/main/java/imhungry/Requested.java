@@ -31,7 +31,7 @@ public class Requested extends AbstractEvent {
     public Long getRequestId() {
         return requestId;
     }
-    public void setRequestId(Long id) {
+    public void setRequestId(Long requestId) {
         this.requestId = requestId;
     }
 }

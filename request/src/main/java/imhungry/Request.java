@@ -18,26 +18,26 @@ public class Request {
 
     @PrePersist
     public void onPrePersist() {
-        System.out.println("########## PrePersist Start.");
-        System.out.println("########## ID=" + this.getId());
-        System.out.println("########## STATUS=" + this.getStatus());
-        System.out.println("########## MENUTYPE=" + this.getMenuType());
-        System.out.println("########## REQUESTID=" + this.getRequestId());
-        System.out.println("########## MENUID=" + this.getMenuId());
-        System.out.println("########## ORDERID=" + this.getOrderId());
+        // System.out.println("########## PrePersist Start.");
+        // System.out.println("########## ID=" + this.getId());
+        // System.out.println("########## STATUS=" + this.getStatus());
+        // System.out.println("########## MENUTYPE=" + this.getMenuType());
+        // System.out.println("########## REQUESTID=" + this.getRequestId());
+        // System.out.println("########## MENUID=" + this.getMenuId());
+        // System.out.println("########## ORDERID=" + this.getOrderId());
 //        if (this.getId().equals(null)) this.setId(1L);
 
     }
 
     @PostPersist
     public void onPostPersist(){
-        System.out.println("########## PostPersist Start.");
-        System.out.println("########## ID=" + this.getId());
-        System.out.println("########## STATUS=" + this.getStatus());
-        System.out.println("########## MENUTYPE=" + this.getMenuType());
-        System.out.println("########## REQUESTID=" + this.getRequestId());
-        System.out.println("########## MENUID=" + this.getMenuId());
-        System.out.println("########## ORDERID=" + this.getOrderId());
+        // System.out.println("########## PostPersist Start.");
+        // System.out.println("########## ID=" + this.getId());
+        // System.out.println("########## STATUS=" + this.getStatus());
+        // System.out.println("########## MENUTYPE=" + this.getMenuType());
+        // System.out.println("########## REQUESTID=" + this.getRequestId());
+        // System.out.println("########## MENUID=" + this.getMenuId());
+        // System.out.println("########## ORDERID=" + this.getOrderId());
 
         if ("REQUESTED".equals(this.getStatus())) {
             imhungry.external.Dicision dicision = new imhungry.external.Dicision();
@@ -62,7 +62,7 @@ public class Request {
 //            BeanUtils.copyProperties(this, requestCanceled);
 //            requestCanceled.publishAfterCommit();
 //        }
-        System.out.println("########## PostPersist End.");
+        // System.out.println("########## PostPersist End.");
     }
 
     @PreUpdate

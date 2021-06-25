@@ -18,7 +18,7 @@ public class DicisionController {
             method = RequestMethod.POST,
             produces = "application/json;charset=UTF-8")
     public boolean menuSelect(HttpServletRequest request, HttpServletResponse response) {
-        System.out.println("########## Request /dicisions/menuSelect");
+        System.out.println("########### Request /dicisions/menuSelect");
 
         Long requestId = Long.valueOf(request.getParameter("requestId"));
         String menuType = request.getParameter("menuType");
@@ -31,7 +31,7 @@ public class DicisionController {
         dicision.setMenuId(new Random().nextLong());
         dicisionRepository.save(dicision);
 
-        System.out.println("########## Response /dicisions/menuSelect [true]");
+        System.out.println("########### Response /dicisions/menuSelect [true]");
         return true;
     }
 

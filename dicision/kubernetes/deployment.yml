@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dicision
-  namespace: jypark
   labels:
     app: dicision
 spec:
@@ -17,7 +16,7 @@ spec:
     spec:
       containers:
         - name: dicision
-          image: skccuser10.azurecr.io/dicision:latest
+          image: user10.azurecr.io/dicision:latest
           ports:
             - containerPort: 8080
           readinessProbe:

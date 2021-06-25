@@ -1,3 +1,5 @@
+![오늘은](https://user-images.githubusercontent.com/80938080/123354332-628eb200-d59e-11eb-890b-b0127a57764b.jpg)
+
 # 뭐먹지! - 메뉴 추천 시스템
 
 본 과제는 MSA/DDD/Event Storming/EDA 를 포괄하는 분석/설계/구현/운영 전단계를 커버하도록 구성하였습니다.  
@@ -40,11 +42,7 @@
 ## EventStorming 결과
 * MSAEZ 모델링한 이벤트스토밍 결과: http://www.msaez.io/#/storming/xShudiMcElbc0zB5RbXcULNN9mz1/mine/9679a9198f1043f3845600bf8eb5b119
 
-### 이벤트 도출
-=>화면캡처
-### 부적격 이벤트 탈락
-=>화면캡처
-### 액터, 커맨드 부착하여 읽기 좋게
+### 이벤트 도출 후 액터, 커맨드 부착하여 읽기 좋게
 ![imhungry-69](https://user-images.githubusercontent.com/80938080/122349218-ff41c600-cf86-11eb-8d78-a2b2669f3418.png)
 ### 어그리게잇으로 묶기
 ![imhungry-79](https://user-images.githubusercontent.com/80938080/122349112-e0dbca80-cf86-11eb-8f02-56958f2d612f.png)
@@ -81,18 +79,23 @@
 # 구현
 분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 각 Bounded Context 별로 마이크로서비스들을 스프링부트로 구현하였다. 구현한 각 서비스를 로컬에서 실행하는 방법은 아래와 같다. (각 서비스의 포트넘버는 8081 ~ 8084, 8088 이다)
 ```shell
+# 메뉴 요청 서비스
 cd request
 mvn spring-boot:run
 
+# 메뉴 추천 서비스
 cd dicision
 mvn spring-boot:run 
 
+# 주문 서비스
 cd order
 mvn spring-boot:run  
 
+# 메뉴 추천 현황
 cd myInfo
 mvn spring-boot:run 
 
+# Gateway
 cd gateway
 mvn spring-boot:run
 ```
@@ -131,6 +134,7 @@ public class Request {
             dicision.setMenuType(this.getMenuType());
             dicision.setRequestId(this.getId());
 
+            // 동기처리 호출 (Request -> Dicision)
             RequestApplication.applicationContext.getBean(imhungry.external.DicisionService.class)
                     .menuSelect(dicision);
 
@@ -248,7 +252,7 @@ http GET http://localhost:8084/myPages
 ```
 
 ## Req/Resp
-분석단계의 비기능적 조건 중 `메뉴가 결정되지 않으면 메뉴 추천되지 않는다.`의 요건을 충족하기 위해 Request 서비스에서 Dicision 서비스 간의 호출은 동기식 일관성을 유지하는 트랜잭션으로 처리하였다. 호출 프로토콜은 Rest Repository에 의해 노출되어있는 REST 서비스를 FeignClient를 이용하여 호출하도록 한다.
+분석단계의 비기능적 조건 중 `메뉴가 결정되지 않으면 메뉴 추천되지 않는다.`의 요건을 충족하기 위해 Request 서비스에서 Dicision 서비스 간의 호출은 동기식으로 일관성을 유지하는 트랜잭션으로 처리하였다. 호출 프로토콜은 Rest Repository에 의해 노출되어있는 REST 서비스를 FeignClient를 이용하여 호출하도록 한다.
 
 > Request 서비스의 external.DicisionService.java
 ```java
@@ -266,10 +270,9 @@ public interface DicisionService {
 
     @RequestMapping(method= RequestMethod.GET, path="/dicisions")
     public void menuSelect(@RequestBody Dicision dicision);
-
 }
 ```
-> Request 서비스의 Req/Resp
+> Request 서비스의 동기처리 호출
 ```java
     @PostPersist
     public void onPostPersist(){
@@ -280,6 +283,7 @@ public interface DicisionService {
             dicision.setMenuType(this.getMenuType());
             dicision.setRequestId(this.getId());
 
+            // 동기처리 호출 (Request -> Dicision)
             RequestApplication.applicationContext.getBean(imhungry.external.DicisionService.class)
                     .menuSelect(dicision);
 
@@ -293,7 +297,7 @@ public interface DicisionService {
     }
 ```
 
-> Dicision 서비스의 Request 서비스 FeignClient 호출 대상
+> Dicision 서비스의 동기처리 FeignClient 호출 대상
 ```java
 @RestController
 public class DicisionController {
@@ -370,9 +374,9 @@ server:
 
 ## Polyglot
 
-- 회의(Request)의 경우 H2 DB인 결제(Dicision)/회의실(Order) 서비스와 달리 Hsql로 구현하여 MSA의 서비스간 서로 다른 종류의 DB에도 문제없이 동작하여 다형성을 만족하는지 확인하였다.
+- 주문(Order) 서비스의 경우 H2 DB인 메뉴 요청(Request)/메뉴 추천(Dicision) 서비스와 달리 Hsql로 구현하여 MSA의 서비스간 서로 다른 종류의 DB에도 문제없이 동작하여 다형성을 만족하는지 확인하였다.
 
-> Dicision, Order 서비스의 pom.xml 설정
+> Request, Dicision 서비스의 pom.xml 설정
 ```xml
     <dependency>
         <groupId>com.h2database</groupId>
@@ -380,7 +384,7 @@ server:
         <scope>runtime</scope>
     </dependency>
 ```
-> Request 서비스의 pom.xml 설정
+> Order 서비스의 pom.xml 설정
 ```xml
     <dependency>
         <groupId>org.hsqldb</groupId>
@@ -415,51 +419,56 @@ mvn package
 cd ../myInfo
 mvn package
 ```
+- Azure 연결 및 권한 획득
+```shell
+# Azure 로그인
+az login
+
+# Azure 권한 획득 및 aks와 acr 연결
+az aks get-credentials --resource-group user10-rsrcgrp --name user10-aks
+kubectl config current-context
+az aks update -n user10-aks -g user10-rsrcgrp --attach-acr user10
+```
+
 - Docker Image Push/Deploy/서비스 생성(yaml 이용)
 ```shell
-# Namespace 설정
-kubectl config set-context --current --namespace=jypark
-
-# Namespace 생성
-kubectl create ns jypark
-
 cd gateway
-az acr build --registry skccjypark --image skccjypark.azurecr.io/gateway:latest .
+az acr build --registry user10 --image user10.azurecr.io/gateway:latest .
 
 cd kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yml
 
 cd ../dicision
-az acr build --registry skccjypark --image skccjypark.azurecr.io/dicision:latest .
+az acr build --registry user10 --image user10.azurecr.io/dicision:latest .
 
 cd kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yml
 
 cd ../order
-az acr build --registry skccjypark --image skccjypark.azurecr.io/order:latest .
+az acr build --registry user10 --image user10.azurecr.io/order:latest .
 
 cd kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yml
 
 cd ../request
-az acr build --registry skccjypark --image skccjypark.azurecr.io/request:latest .
+az acr build --registry user10 --image user10.azurecr.io/request:latest .
 
 cd kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yml
 
 cd ../myInfo
-az acr build --registry skccjypark --image skccjypark.azurecr.io/myInfo:latest .
+az acr build --registry user10 --image user10.azurecr.io/myInfo:latest .
 
 cd kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yml
 ```
-- Deploy 결과 확인
-=>화면캡처
+> Deploy 결과 확인
+![Cap 2021-06-24 14-16-24-298](https://user-images.githubusercontent.com/80938080/123206530-d2496200-d4f6-11eb-833a-fedf13adb8a8.png)
 
 ## Config Map
 > 변경될 수 있는 설정을 ConfigMap을 사용하여 관리한다.  
@@ -473,7 +482,7 @@ kubectl apply -f service.yml
 ```
 - Config Map 사용 (/request/src/main/java/jyrestaurant/external/DicisionService.java)
 ```java
-  @FeignClient(name="dicision", url="${api.url.Dicision")
+  @FeignClient(name="dicision", url="${api.url.dicision")
   public interface DicisionService {
   
       @RequestMapping(method= RequestMethod.GET, path="/dicisions")
@@ -492,15 +501,130 @@ kubectl apply -f service.yml
 
 - ConfigMap 생성
 ```shell
-kubestl create configmap apiurl --from-literal=url=//http://dicision:8080 -n jypark
+kubestl create configmap apiurl --from-literal=url=//http://dicision:8080
 ```
-kubectl get configmap apiurl -o yaml
-=>화면캡처
+
+> ConfigMap 결과
+![Cap 2021-06-24 14-02-16-163](https://user-images.githubusercontent.com/80938080/123205423-d4122600-d4f4-11eb-8853-043d329647ea.png)
 
 ## Circuit Breaker
+- Spring FeignClient + Hystrix을 사용하여 서킷 브레이크 구현
+- Hystrix 설정 : 메뉴 선택 (Dicision) 서비스의 요청 쓰레드 처리 시간이 610ms가 넘어서기 시작한 후 어느정도 지속되면 서킷 브레이커가 닫히도록 설정
+- 메뉴 선택을 요청하는 Request 서비스에서 Hystrix 설정
+
+> Request 서비스의 application.yml : Hystrix 설정
+```yaml
+feign:
+  hystrix:
+    enabled: true
+hystrix:
+  command:
+    default:
+      execution.isolation.thread.timeoutInMilliseconds: 610
+```
+
+> Dicision 서비스의 임의 부하처리 : Dicision.java, 400ms에서 +/- 220ms 지연 발생
+```java
+    @PrePersist
+    public void onPrePersist() {
+        try {
+            Thread.currentThread().sleep((long) (400 + Math.random() * 220));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+```
+
+- 부하테스터 siege 툴을 사용한 서킷브레이커 동작 확인
+    - 동시 사용자 100명
+    - 60초 동안 실시
+    
+```shell
+siege -c100 -t60S -r10 -v --content-type "application/json" 'http://52.231.97.198:8080/requests POST {"menuType":"A", "status":"REQUESTED"}'
+```
+- 테스트 결과
+> 부하가 발생하고 서킷브레이커가 발동하여 요청 실패하였고, 밀린 부하가 다시 처리되면서 메뉴 선택 요청(Request)를 받기 시작함
+> ![Cap 2021-06-24 16-15-26-459](https://user-images.githubusercontent.com/80938080/123220608-15143580-d509-11eb-89df-a6b08e0faff7.png)
+> 운영 중인 시스템은 죽지 않고 지속적으로 서킷브레이커에 의하여 적절히 회로의 열림과 닫힘이 발생하며 자원을 보호하고 있음을 보여줌. 하지만, 47%가 성공하였고, 53%가 실패했다는 것은 사요자의 편의성에 있어 좋지 않기 때문에 Retry 설정과 동적 Scale out (Replica의 자동 추가, HPA)을 통하여 시스템 확장에 대한 보완이 필요.
+> ![Cap 2021-06-24 16-15-45-288](https://user-images.githubusercontent.com/80938080/123220618-18a7bc80-d509-11eb-84fa-bbcc7be9e931.png)
 
 ## Autoscale (HPA)
+Circuit Breaker는 시스템을 안정적으로 운여할 수 있게 해 줬지만 사용자의 요청이 증가하는 경우 100% 받아주지 못하기 때문에 이데 대한 보완책으로 자동화된 확장 기능(HPA)을 적용하고자 한다.
+
+- Request 서비스의 deployment.yml 파일 설정
+```yaml
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "500Mi"
+              cpu: "500m"
+```
+
+- 메뉴 요청 (Request) 서비스에 대한 Replica를 동적으로 늘려주도록 HPA를 설정한다.
+- CPU 사용량이 15%를 넘어서면 Replica를 10개까지 늘려준다.
+```shell
+kubectl autoscale deploy request --min=1 --max=10 --cpu-percent=15
+```
+> HPA 설정 확인
+> ![Cap 2021-06-24 16-41-30-284](https://user-images.githubusercontent.com/80938080/123222630-147c9e80-d50b-11eb-9470-337700bcf0b4.png)
+
+- 서킷브레이커에서 했던 방식으로 1분동안 부하를 걸어준다.
+```shell
+siege -c100 -t60S -r10 -v --content-type "application/json" 'http://request:8080/requests POST {"menuType":"A", "status":"REQUESTED"}'
+```
+- 오토스케일 진행 현황을 모니터링 한다.
+```shell
+kubectl get deploy request -w
+```
+> 오토스케일 결과 확인
+> ![Cap 2021-06-24 17-27-53-872](https://user-images.githubusercontent.com/80938080/123267449-fd07da80-d537-11eb-96c6-6d6ca93bdc4c.png)
 
 ## Zero-downtime deploy (Readiness Probe)
+- Request 서비스의 deployment.yml에 설정되어 있는 ReadinessProbe 설정
+```yaml
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+```
+- deployment.yml 에서 ReadinessProbe 설정 제거 후, 배포 중 siege 테스트 진행
+  ![Cap 2021-06-24 20-32-31-137](https://user-images.githubusercontent.com/80938080/123256175-a3011800-d52b-11eb-8eba-6b45fbe80e9f.png)
+
+- ReadinessProbe 적용된 deploylment.yml 적용
+- 새로운 버전의 이미지로 교체 (V1 신규 추가)
+```shell
+az acr build --registry user10 --image user10.azurecr.io/request:v1 .
+kubectl set image deploy request request=user10.azurecr.io/request:v1
+```
+> 신규 버전(V1) 정상 배포 확인
+![Cap 2021-06-25 13-08-33-593](https://user-images.githubusercontent.com/80938080/123368880-96c29c80-d5b7-11eb-8302-831f88b9098f.png)
+
+> 무정지 배포를 위한 ReadinessProbe 옵션 적용 후 siege 테스트 결과 Availability 100% 확인 
+> ![Cap 2021-06-25 13-25-11-648](https://user-images.githubusercontent.com/80938080/123369492-ccb45080-d5b8-11eb-9c4e-e1bcb182ade8.png)
 
 ## Self-healing (Liveness Probe)
+- Request 서비스의 deployment.yml에 설정되어 있는 LivenessProbe
+```yaml
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+```
+- Request 서비스에 Liveness가 정상 적용된 것을 확인
+  ![Cap 2021-06-24 20-58-24-385](https://user-images.githubusercontent.com/80938080/123259197-2bcd8300-d52f-11eb-94dc-cb00313c766e.png)
+  
+- Liveness 테스트를 위해 Port : 8090으로 변경
+  ![Cap 2021-06-24 21-06-27-433](https://user-images.githubusercontent.com/80938080/123260074-2290e600-d530-11eb-934c-c82f68751db7.png)
+
+- Liveness 적용된 Request 서비스에서 응답불가로 인한 Restart 동작 확인
+  ![Cap 2021-06-24 21-58-46-807](https://user-images.githubusercontent.com/80938080/123266976-77842a80-d537-11eb-99ca-c553866b3002.png)

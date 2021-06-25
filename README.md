@@ -1,3 +1,5 @@
+![오늘은](https://user-images.githubusercontent.com/80938080/123354332-628eb200-d59e-11eb-890b-b0127a57764b.jpg)
+
 # 뭐먹지! - 메뉴 추천 시스템
 
 본 과제는 MSA/DDD/Event Storming/EDA 를 포괄하는 분석/설계/구현/운영 전단계를 커버하도록 구성하였습니다.  
@@ -40,11 +42,7 @@
 ## EventStorming 결과
 * MSAEZ 모델링한 이벤트스토밍 결과: http://www.msaez.io/#/storming/xShudiMcElbc0zB5RbXcULNN9mz1/mine/9679a9198f1043f3845600bf8eb5b119
 
-### 이벤트 도출
-=>화면캡처
-### 부적격 이벤트 탈락
-=>화면캡처
-### 액터, 커맨드 부착하여 읽기 좋게
+### 이벤트 도출 후 액터, 커맨드 부착하여 읽기 좋게
 ![imhungry-69](https://user-images.githubusercontent.com/80938080/122349218-ff41c600-cf86-11eb-8d78-a2b2669f3418.png)
 ### 어그리게잇으로 묶기
 ![imhungry-79](https://user-images.githubusercontent.com/80938080/122349112-e0dbca80-cf86-11eb-8f02-56958f2d612f.png)
@@ -81,18 +79,23 @@
 # 구현
 분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 각 Bounded Context 별로 마이크로서비스들을 스프링부트로 구현하였다. 구현한 각 서비스를 로컬에서 실행하는 방법은 아래와 같다. (각 서비스의 포트넘버는 8081 ~ 8084, 8088 이다)
 ```shell
+# 메뉴 요청 서비스
 cd request
 mvn spring-boot:run
 
+# 메뉴 추천 서비스
 cd dicision
 mvn spring-boot:run 
 
+# 주문 서비스
 cd order
 mvn spring-boot:run  
 
+# 메뉴 추천 현황
 cd myInfo
 mvn spring-boot:run 
 
+# Gateway
 cd gateway
 mvn spring-boot:run
 ```
@@ -131,6 +134,7 @@ public class Request {
             dicision.setMenuType(this.getMenuType());
             dicision.setRequestId(this.getId());
 
+            // 동기처리 호출 (Request -> Dicision)
             RequestApplication.applicationContext.getBean(imhungry.external.DicisionService.class)
                     .menuSelect(dicision);
 
@@ -248,7 +252,7 @@ http GET http://localhost:8084/myPages
 ```
 
 ## Req/Resp
-분석단계의 비기능적 조건 중 `메뉴가 결정되지 않으면 메뉴 추천되지 않는다.`의 요건을 충족하기 위해 Request 서비스에서 Dicision 서비스 간의 호출은 동기식 일관성을 유지하는 트랜잭션으로 처리하였다. 호출 프로토콜은 Rest Repository에 의해 노출되어있는 REST 서비스를 FeignClient를 이용하여 호출하도록 한다.
+분석단계의 비기능적 조건 중 `메뉴가 결정되지 않으면 메뉴 추천되지 않는다.`의 요건을 충족하기 위해 Request 서비스에서 Dicision 서비스 간의 호출은 동기식으로 일관성을 유지하는 트랜잭션으로 처리하였다. 호출 프로토콜은 Rest Repository에 의해 노출되어있는 REST 서비스를 FeignClient를 이용하여 호출하도록 한다.
 
 > Request 서비스의 external.DicisionService.java
 ```java
@@ -266,10 +270,9 @@ public interface DicisionService {
 
     @RequestMapping(method= RequestMethod.GET, path="/dicisions")
     public void menuSelect(@RequestBody Dicision dicision);
-
 }
 ```
-> Request 서비스의 Req/Resp
+> Request 서비스의 동기처리 호출
 ```java
     @PostPersist
     public void onPostPersist(){
@@ -280,6 +283,7 @@ public interface DicisionService {
             dicision.setMenuType(this.getMenuType());
             dicision.setRequestId(this.getId());
 
+            // 동기처리 호출 (Request -> Dicision)
             RequestApplication.applicationContext.getBean(imhungry.external.DicisionService.class)
                     .menuSelect(dicision);
 
@@ -293,7 +297,7 @@ public interface DicisionService {
     }
 ```
 
-> Dicision 서비스의 Request 서비스 FeignClient 호출 대상
+> Dicision 서비스의 동기처리 FeignClient 호출 대상
 ```java
 @RestController
 public class DicisionController {
@@ -370,9 +374,9 @@ server:
 
 ## Polyglot
 
-- 회의(Request)의 경우 H2 DB인 결제(Dicision)/회의실(Order) 서비스와 달리 Hsql로 구현하여 MSA의 서비스간 서로 다른 종류의 DB에도 문제없이 동작하여 다형성을 만족하는지 확인하였다.
+- 주문(Order) 서비스의 경우 H2 DB인 메뉴 요청(Request)/메뉴 추천(Dicision) 서비스와 달리 Hsql로 구현하여 MSA의 서비스간 서로 다른 종류의 DB에도 문제없이 동작하여 다형성을 만족하는지 확인하였다.
 
-> Dicision, Order 서비스의 pom.xml 설정
+> Request, Dicision 서비스의 pom.xml 설정
 ```xml
     <dependency>
         <groupId>com.h2database</groupId>
@@ -380,7 +384,7 @@ server:
         <scope>runtime</scope>
     </dependency>
 ```
-> Request 서비스의 pom.xml 설정
+> Order 서비스의 pom.xml 설정
 ```xml
     <dependency>
         <groupId>org.hsqldb</groupId>
@@ -591,6 +595,18 @@ kubectl get deploy request -w
 ```
 - deployment.yml 에서 ReadinessProbe 설정 제거 후, 배포 중 siege 테스트 진행
   ![Cap 2021-06-24 20-32-31-137](https://user-images.githubusercontent.com/80938080/123256175-a3011800-d52b-11eb-8eba-6b45fbe80e9f.png)
+
+- ReadinessProbe 적용된 deploylment.yml 적용
+- 새로운 버전의 이미지로 교체 (V1 신규 추가)
+```shell
+az acr build --registry user10 --image user10.azurecr.io/request:v1 .
+kubectl set image deploy request request=user10.azurecr.io/request:v1
+```
+> 신규 버전(V1) 정상 배포 확인
+![Cap 2021-06-25 13-08-33-593](https://user-images.githubusercontent.com/80938080/123368880-96c29c80-d5b7-11eb-8302-831f88b9098f.png)
+
+> 무정지 배포를 위한 ReadinessProbe 옵션 적용 후 siege 테스트 결과 Availability 100% 확인 
+> ![Cap 2021-06-25 13-25-11-648](https://user-images.githubusercontent.com/80938080/123369492-ccb45080-d5b8-11eb-9c4e-e1bcb182ade8.png)
 
 ## Self-healing (Liveness Probe)
 - Request 서비스의 deployment.yml에 설정되어 있는 LivenessProbe
